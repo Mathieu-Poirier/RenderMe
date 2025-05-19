@@ -16,16 +16,19 @@ int main() {
   Vec3_t target = {0.0, 0.0, 0.0};
   Vec3_t up = {0.0, 1.0, 0.0};
 
-  // Hide cursor
-  std::cout << "\033[?25l";
+  std::cout << "\033[?25l"; // Hide cursor
 
-  // Cube vertices
+  // Original cube vertices
   Vec3_t points[] = {{-1, -1, -1}, {1, -1, -1}, {1, 1, -1}, {-1, 1, -1},
                      {-1, -1, 1},  {1, -1, 1},  {1, 1, 1},  {-1, 1, 1}};
 
+  Vec3Buffer world(points, std::size(points));
+
+  Vec3Buffer camera{};
+  Vec2Buffer projected;
+
   double t = 0.0;
   while (true) {
-    // Circular camera motion around cube
     double radius = 5.0;
     double speed = 0.5;
     Vec3_t eye = {radius * std::cos(t) * 2, 0.05 * t * t + std::sin(t),
@@ -36,19 +39,23 @@ int main() {
                     [CameraSettings::screen_width];
     ClearFramebuffer(framebuffer);
 
-    for (Vec3_t &world : points) {
-      Vec3_t cam = WorldToCamera(world, view, eye);
-      if (cam.z <= CameraSettings::near_plane ||
-          cam.z >= CameraSettings::far_plane)
+    camera.clear();
+    projected.clear();
+
+    for (size_t i = 0; i < world.size(); ++i) {
+      WorldToCamera(world, i, view, eye, camera);
+    }
+
+    for (size_t i = 0; i < camera.size(); ++i) {
+      if (camera.z[i] <= CameraSettings::near_plane ||
+          camera.z[i] >= CameraSettings::far_plane)
         continue;
-      assert(cam.z < CameraSettings::far_plane &&
-             "Object beyond far clipping plane!");
 
-      Vec2_t projected = ProjectToScreen(cam, CameraSettings::focal_length,
-                                         CameraSettings::aspect_ratio);
+      ProjectToScreen(camera, i, CameraSettings::focal_length,
+                      CameraSettings::aspect_ratio, projected);
 
-      double x_ndc = (projected.x + 1.0) * 0.5;
-      double y_ndc = 1.0 - ((projected.y + 1.0) * 0.5);
+      double x_ndc = (projected.x[i] + 1.0) * 0.5;
+      double y_ndc = 1.0 - ((projected.y[i] + 1.0) * 0.5);
 
       int x = static_cast<int>(x_ndc * CameraSettings::screen_width);
       int y = static_cast<int>(y_ndc * CameraSettings::screen_height);
@@ -66,8 +73,6 @@ int main() {
     t += speed * 0.04;
   }
 
-  // Show cursor again (unreachable in current loop)
-  std::cout << "\033[?25h";
-
+  std::cout << "\033[?25h"; // Show cursor (unreachable in current loop)
   return 0;
 }

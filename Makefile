@@ -1,7 +1,7 @@
 # ==== Configurable Compiler and Base Flags ====
 
 CXX := clang++
-CXXFLAGS := -Wall -Wextra -std=c++23
+CXXFLAGS := -Wall -Wextra -std=c++23 -Isrc
 
 # ==== Mode-Specific Flags ====
 
@@ -13,6 +13,10 @@ LINK_SMALL    := -Wl,--gc-sections
 
 PROFILE_GEN   := -fprofile-generate
 PROFILE_USE   := -fprofile-use=default.profdata
+
+
+DEMO_SRC := $(wildcard demos/*.cpp)
+DEMO_BIN := $(patsubst demos/%.cpp, build/demo_%, $(DEMO_SRC))
 
 # ==== Sources ====
 
@@ -28,6 +32,13 @@ MAIN := src/Render.cpp
 all: $(TARGET)
 
 $(TARGET): $(MAIN)
+	@mkdir -p build
+	$(CXX) $(CXXFLAGS) $(RELEASE_FLAGS) -o $@ $^
+
+
+demos: $(DEMO_BIN)
+
+build/demo_%: demos/%.cpp $(SRC)
 	@mkdir -p build
 	$(CXX) $(CXXFLAGS) $(RELEASE_FLAGS) -o $@ $^
 
