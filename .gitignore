@@ -1,0 +1,29 @@
+# === Build output ===
+build/
+*.out
+*.exe
+*.o
+*.obj
+*.log
+*.a
+*.so
+*.dylib
+*.dll
+
+# === Profile and analysis data ===
+*.profraw
+*.profdata
+
+# === Misc ===
+*.tmp
+*.bak
+*.swp
+
+# === VS Code ===
+.vscode/
+
+# === Clangd/other tools ===
+compile_commands.json
+
+# === Backup files ===
+*~
