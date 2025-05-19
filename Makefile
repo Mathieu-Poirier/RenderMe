@@ -28,28 +28,33 @@ DEMO_BIN   := $(patsubst $(demo_DIR)/%.cpp,$(BUILD_DIR)/%,$(DEMO_SRC))
 
 # ==== Targets ====
 
-.PHONY: all demos run-demo debug small profile-gen profile-use strip clean format lint help
+.PHONY: all demos build-demo run-demo debug small profile-gen profile-use strip clean format lint help
+
+# Build all demos
 all: demos
 
 demos: $(DEMO_BIN)
 
-$(BUILD_DIR)/%: $(demo_DIR)/%.cpp $(ENGINE_SRC)
+# Build a single demo
+build-demo:
 	@mkdir -p $(BUILD_DIR)
-	$(CXX) $(CXXFLAGS) $(RELEASE_FLAGS) -o $@ $< $(ENGINE_SRC)
+	$(CXX) $(CXXFLAGS) $(RELEASE_FLAGS) -o $(BUILD_DIR)/$(NAME) $(demo_DIR)/$(NAME).cpp $(ENGINE_SRC)
 
-# Run a specific demo by name: make run-demo NAME=DemoName
-run-demo: demos
+# Run a single demo
+run-demo: build-demo
 	@./$(BUILD_DIR)/$(NAME)
 
-# Builds for a single demo in different modes
-debug: $(DEMO_BIN)
+# Builds a single demo in debug mode
+debug:
 	@mkdir -p $(BUILD_DIR)
 	$(CXX) $(CXXFLAGS) $(DEBUG_FLAGS) -o $(BUILD_DIR)/debug_$(NAME) $(demo_DIR)/$(NAME).cpp $(ENGINE_SRC)
 
-small: $(DEMO_BIN)
+# Build a size-optimized demo
+small:
 	@mkdir -p $(BUILD_DIR)
 	$(CXX) $(CXXFLAGS) $(SMALL_FLAGS) $(LINK_SMALL) -o $(BUILD_DIR)/small_$(NAME) $(demo_DIR)/$(NAME).cpp $(ENGINE_SRC)
 
+# PGO targets
 profile-gen:
 	@mkdir -p $(BUILD_DIR)
 	$(CXX) $(CXXFLAGS) $(RELEASE_FLAGS) $(PROFILE_GEN) -o $(BUILD_DIR)/profile_$(NAME) $(demo_DIR)/$(NAME).cpp $(ENGINE_SRC)
@@ -58,15 +63,15 @@ profile-use:
 	@mkdir -p $(BUILD_DIR)
 	$(CXX) $(CXXFLAGS) $(RELEASE_FLAGS) $(PROFILE_USE) -flto -o $(BUILD_DIR)/profile_use_$(NAME) $(demo_DIR)/$(NAME).cpp $(ENGINE_SRC)
 
-# Strip symbols
+# Strip symbols from output
 strip:
 	strip $(BUILD_DIR)/$(NAME)
 
-# Remove build artifacts
+# Remove all build artifacts
 clean:
 	rm -rf $(BUILD_DIR) default.profraw default.profdata
 
-# Format source files
+# Format source
 format:
 	@command -v clang-format >/dev/null 2>&1 && \
 		clang-format -i $(ENGINE_SRC) $(DEMO_SRC) || \
@@ -82,21 +87,23 @@ lint:
 help:
 	@echo ""
 	@echo "Build Targets:"
-	@echo "  make            - Build all demos"
-	@echo "  make demos      - Alias for 'make'"
-	@echo "  make run-demo NAME=<DemoName> - Run a specific demo do not use quotation marks"
+	@echo "  make                - Build all demos"
+	@echo "  make demos          - Alias for 'make'"
+	@echo "  make build-demo NAME=<DemoName> - Compile a specific demo"
+	@echo "  make run-demo NAME=<DemoName>   - Build + run a specific demo"
 	@echo ""
 	@echo "Configuration Targets:"
-	@echo "  make debug      - Build debug version of a demo"
-	@echo "  make small      - Build size-optimized demo"
+	@echo "  make debug          - Debug build of a specific demo"
+	@echo "  make small          - Smallest possible binary build"
 	@echo ""
 	@echo "PGO Targets:"
-	@echo "  make profile-gen   - Build with instrumentation"
-	@echo "  make profile-use   - Build optimized with profile data"
+	@echo "  make profile-gen    - Profile generation build"
+	@echo "  make profile-use    - Use collected profile data"
 	@echo ""
 	@echo "Utility Targets:"
-	@echo "  make strip       - Strip symbols"
-	@echo "  make clean       - Remove build artifacts"
-	@echo "  make format      - Run clang-format"
-	@echo "  make lint        - Run cppcheck"
-	@echo "  make help        - Show this help message"
+	@echo "  make strip          - Strip symbols from demo binary"
+	@echo "  make clean          - Remove all build artifacts"
+	@echo "  make format         - Format all source code"
+	@echo "  make lint           - Run static analysis (cppcheck)"
+	@echo "  make help           - Show this help message"
+	@echo ""

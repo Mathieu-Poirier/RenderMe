@@ -5,6 +5,9 @@
 #include <cmath>
 #include <cassert>
 
+constexpr Vec3_t CAMERA_UP = {0.0, 1.0, 0.0};
+
+
 inline CameraView_t LookAt(const Vec3_t& eye,
                            const Vec3_t& target,
                            const Vec3_t& up) {

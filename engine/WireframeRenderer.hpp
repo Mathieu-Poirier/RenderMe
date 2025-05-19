@@ -41,7 +41,7 @@ inline void RenderMeshOutline(const Vec3Buffer& verts,
                               const Vec3_t& target,
                               char (&fb)[CameraSettings::screen_height][CameraSettings::screen_width]) {
     auto edges = ExtractEdges(tris);
-    auto view = LookAt(eye, target, {0, 1, 0});
+    auto view = LookAt(eye, target, CAMERA_UP);
     const double focal = CameraSettings::FovToFocalLength(CameraSettings::camera_fov);
 
     for (const auto& e : edges) {

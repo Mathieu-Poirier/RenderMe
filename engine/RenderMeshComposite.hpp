@@ -3,19 +3,22 @@
 #include "WireframeRenderer.hpp"
 
 // Renders filled triangles, then outlines over top
-inline void RenderMeshComposite(const Vec3Buffer& verts,
-                                const TriangleBuffer& tris,
-                                const Vec3_t& eye,
-                                const Vec3_t& target,
-                                char (&fb)[CameraSettings::screen_height][CameraSettings::screen_width],
-                                char fillChar = '#',
-                                char lineChar = '*') {
+inline void RenderMeshComposite(
+    const Vec3Buffer& verts,
+    const TriangleBuffer& tris,
+    const Vec3_t& eye,
+    const Vec3_t& target,
+    char (&fb)[CameraSettings::screen_height][CameraSettings::screen_width],
+    double (&zbuf)[CameraSettings::screen_height][CameraSettings::screen_width],
+    char fillChar = '#',
+    char lineChar = '*'
+) {
     // Fill first
-    RenderMeshFilled(verts, tris, eye, target, fb, fillChar);
+    RenderMeshFilled(verts, tris, eye, target, fb, zbuf, fillChar);
 
     // Outline last
     auto edges = ExtractEdges(tris);
-    auto view = LookAt(eye, target, {0, 1, 0});
+    auto view = LookAt(eye, target, CAMERA_UP);
     const double focal = CameraSettings::FovToFocalLength(CameraSettings::camera_fov);
 
     for (const auto& e : edges) {

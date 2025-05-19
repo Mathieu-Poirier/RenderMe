@@ -7,6 +7,10 @@ using Frame = char[CameraSettings::screen_height][CameraSettings::screen_width];
 
 namespace FrameIO {
 
+// ─────────────────────────────────────────────
+// Framebuffer operations
+// ─────────────────────────────────────────────
+
 inline void ClearFramebuffer(Frame& fb, char fill = ' ') {
     for (int y = 0; y < CameraSettings::screen_height; ++y)
         for (int x = 0; x < CameraSettings::screen_width; ++x)
@@ -44,4 +48,30 @@ inline void RenderChangedLines(const Frame& current,
     std::cout << std::flush;
 }
 
-} 
+// ─────────────────────────────────────────────
+// Depth buffer structure
+// ─────────────────────────────────────────────
+
+struct DepthBuffer {
+    double values[CameraSettings::screen_height][CameraSettings::screen_width];
+
+    void clear(double far_z = CameraSettings::far_plane) {
+        for (int y = 0; y < CameraSettings::screen_height; ++y)
+            for (int x = 0; x < CameraSettings::screen_width; ++x)
+                values[y][x] = far_z;
+    }
+};
+
+// ─────────────────────────────────────────────
+// Optional C-style clear for raw z-buffer arrays
+// ─────────────────────────────────────────────
+
+inline void ClearZBuffer(
+    double (&zbuf)[CameraSettings::screen_height][CameraSettings::screen_width],
+    double depth = CameraSettings::far_plane) {
+    for (int y = 0; y < CameraSettings::screen_height; ++y)
+        for (int x = 0; x < CameraSettings::screen_width; ++x)
+            zbuf[y][x] = depth;
+}
+
+} // namespace FrameIO

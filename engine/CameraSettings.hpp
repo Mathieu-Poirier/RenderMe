@@ -16,6 +16,7 @@ constexpr double pixel_aspect = 2.0;
 constexpr double half_width = screen_width * 0.5;
 constexpr double half_height = screen_height * 0.5;
 
+
 inline constexpr double FovToFocalLength(const double &fov) {
   return 1.0 / std::tan((fov / 2.0) * (PI / 180.0));
 }
