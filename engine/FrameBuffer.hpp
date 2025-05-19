@@ -1,26 +1,30 @@
 #pragma once
 #include "CameraSettings.hpp"
 #include <iostream>
+#include <cstring>
 
-void ClearFramebuffer(
-    char (&fb)[CameraSettings::screen_height][CameraSettings::screen_width]) {
-  for (int y = 0; y < CameraSettings::screen_height; ++y) {
-    for (int x = 0; x < CameraSettings::screen_width; ++x) {
-      fb[y][x] = ' ';
-    }
-  }
+using Frame = char[CameraSettings::screen_height][CameraSettings::screen_width];
+
+inline void ClearFramebuffer(Frame& fb, char fill = ' ') {
+    for (int y = 0; y < CameraSettings::screen_height; ++y)
+        for (int x = 0; x < CameraSettings::screen_width; ++x)
+            fb[y][x] = fill;
 }
 
-void RenderFramebuffer(const char (
-    &fb)[CameraSettings::screen_height][CameraSettings::screen_width]) {
-  std::cout << "\033[?25l";
+inline bool CompareBuffers(const Frame& a, const Frame& b) {
+    return std::memcmp(a, b, sizeof(Frame)) == 0;
+}
 
-  for (int y = 0; y < CameraSettings::screen_height; ++y) {
-    for (int x = 0; x < CameraSettings::screen_width; ++x) {
-      std::cout << fb[y][x];
+inline void CopyBuffer(Frame& dst, const Frame& src) {
+    std::memcpy(dst, src, sizeof(Frame));
+}
+
+inline void RenderFramebuffer(const Frame& fb) {
+    std::cout << "\033[H"; // reset cursor to top-left
+    for (int y = 0; y < CameraSettings::screen_height; ++y) {
+        for (int x = 0; x < CameraSettings::screen_width; ++x)
+            std::cout << fb[y][x];
+        std::cout << '\n';
     }
-    std::cout << '\n';
-  }
-
-  std::cout << std::flush;
+    std::cout << std::flush;
 }
