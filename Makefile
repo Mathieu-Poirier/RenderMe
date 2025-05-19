@@ -1,7 +1,7 @@
 # ==== Configurable Compiler and Base Flags ====
 
 CXX := clang++
-CXXFLAGS := -Wall -Wextra -std=c++23 -Isrc
+CXXFLAGS := -Wall -Wextra -std=c++23 -Iengine
 
 # ==== Mode-Specific Flags ====
 
@@ -14,103 +14,89 @@ LINK_SMALL    := -Wl,--gc-sections
 PROFILE_GEN   := -fprofile-generate
 PROFILE_USE   := -fprofile-use=default.profdata
 
+# ==== Directories ====
 
-DEMO_SRC := $(wildcard demos/*.cpp)
-DEMO_BIN := $(patsubst demos/%.cpp, build/demo_%, $(DEMO_SRC))
+ENGINE_DIR := engine
+demo_DIR   := demos
+BUILD_DIR  := build
 
 # ==== Sources ====
 
-SRC := $(shell find src -name "*.cpp" -o -name "*.h")
-TARGET := build/Render
-
-# Optional auto-detect entry file (comment out next line and uncomment below if needed)
-MAIN := src/Render.cpp
-# MAIN := $(shell grep -l 'int main' src/*.cpp)
+ENGINE_SRC := $(shell find $(ENGINE_DIR) -name "*.cpp" -o -name "*.h")
+DEMO_SRC   := $(wildcard $(demo_DIR)/*.cpp)
+DEMO_BIN   := $(patsubst $(demo_DIR)/%.cpp,$(BUILD_DIR)/%,$(DEMO_SRC))
 
 # ==== Targets ====
 
-all: $(TARGET)
-
-$(TARGET): $(MAIN)
-	@mkdir -p build
-	$(CXX) $(CXXFLAGS) $(RELEASE_FLAGS) -o $@ $^
-
+.PHONY: all demos run-demo debug small profile-gen profile-use strip clean format lint help
+all: demos
 
 demos: $(DEMO_BIN)
 
-build/demo_%: demos/%.cpp $(SRC)
-	@mkdir -p build
-	$(CXX) $(CXXFLAGS) $(RELEASE_FLAGS) -o $@ $^
+$(BUILD_DIR)/%: $(demo_DIR)/%.cpp $(ENGINE_SRC)
+	@mkdir -p $(BUILD_DIR)
+	$(CXX) $(CXXFLAGS) $(RELEASE_FLAGS) -o $@ $< $(ENGINE_SRC)
 
-debug:
-	@mkdir -p build
-	$(CXX) $(CXXFLAGS) $(DEBUG_FLAGS) -o $(TARGET) $(MAIN)
+# Run a specific demo by name: make run-demo NAME=DemoName
+run-demo: demos
+	@./$(BUILD_DIR)/$(NAME)
 
-small:
-	@mkdir -p build
-	$(CXX) $(CXXFLAGS) $(SMALL_FLAGS) $(LINK_SMALL) -o $(TARGET) $(MAIN)
+# Builds for a single demo in different modes
+debug: $(DEMO_BIN)
+	@mkdir -p $(BUILD_DIR)
+	$(CXX) $(CXXFLAGS) $(DEBUG_FLAGS) -o $(BUILD_DIR)/debug_$(NAME) $(demo_DIR)/$(NAME).cpp $(ENGINE_SRC)
+
+small: $(DEMO_BIN)
+	@mkdir -p $(BUILD_DIR)
+	$(CXX) $(CXXFLAGS) $(SMALL_FLAGS) $(LINK_SMALL) -o $(BUILD_DIR)/small_$(NAME) $(demo_DIR)/$(NAME).cpp $(ENGINE_SRC)
 
 profile-gen:
-	@mkdir -p build
-	$(CXX) $(CXXFLAGS) $(RELEASE_FLAGS) $(PROFILE_GEN) -o $(TARGET) $(MAIN)
-
-profile-run:
-	./$(TARGET)
-
-profile-merge:
-	llvm-profdata merge -output=default.profdata default.profraw
+	@mkdir -p $(BUILD_DIR)
+	$(CXX) $(CXXFLAGS) $(RELEASE_FLAGS) $(PROFILE_GEN) -o $(BUILD_DIR)/profile_$(NAME) $(demo_DIR)/$(NAME).cpp $(ENGINE_SRC)
 
 profile-use:
-	@mkdir -p build
-	$(CXX) $(CXXFLAGS) $(RELEASE_FLAGS) $(PROFILE_USE) -flto -o $(TARGET) $(MAIN)
+	@mkdir -p $(BUILD_DIR)
+	$(CXX) $(CXXFLAGS) $(RELEASE_FLAGS) $(PROFILE_USE) -flto -o $(BUILD_DIR)/profile_use_$(NAME) $(demo_DIR)/$(NAME).cpp $(ENGINE_SRC)
 
-run: $(TARGET)
-	clear
-	./$(TARGET)
-
+# Strip symbols
 strip:
-	strip $(TARGET)
+	strip $(BUILD_DIR)/$(NAME)
 
+# Remove build artifacts
 clean:
-	rm -rf build default.profraw default.profdata
+	rm -rf $(BUILD_DIR) default.profraw default.profdata
 
-inspect:
-	cat $(MAIN) | less
-
+# Format source files
 format:
 	@command -v clang-format >/dev/null 2>&1 && \
-		clang-format -i $(SRC) || \
+		clang-format -i $(ENGINE_SRC) $(DEMO_SRC) || \
 		echo "clang-format not found. Install it to enable formatting."
 
+# Static analysis
 lint:
 	@command -v cppcheck >/dev/null 2>&1 && \
-		cppcheck --enable=all --std=c++23 --inconclusive --enable=style --quiet src || \
+		cppcheck --enable=all --std=c++23 --inconclusive --enable=style --quiet $(ENGINE_SRC) $(DEMO_SRC) || \
 		echo "cppcheck not found. Install it to enable linting."
 
-check: format lint
-
+# Help message
 help:
 	@echo ""
 	@echo "Build Targets:"
-	@echo "  make all            - Build release (optimized) binary"
-	@echo "  make debug          - Build with debug symbols and sanitizers"
-	@echo "  make small          - Build size-optimized stripped binary"
+	@echo "  make            - Build all demos"
+	@echo "  make demos      - Alias for 'make'"
+	@echo "  make run-demo NAME=<DemoName> - Run a specific demo do not use quotation marks"
+	@echo ""
+	@echo "Configuration Targets:"
+	@echo "  make debug      - Build debug version of a demo"
+	@echo "  make small      - Build size-optimized demo"
 	@echo ""
 	@echo "PGO Targets:"
-	@echo "  make profile-gen    - Build with profile instrumentation"
-	@echo "  make profile-run    - Run the instrumented binary"
-	@echo "  make profile-merge  - Merge profile data to default.profdata"
-	@echo "  make profile-use    - Build optimized binary using profile data"
+	@echo "  make profile-gen   - Build with instrumentation"
+	@echo "  make profile-use   - Build optimized with profile data"
 	@echo ""
 	@echo "Utility Targets:"
-	@echo "  make run            - Clear terminal and run Render"
-	@echo "  make strip          - Strip symbols from Render"
-	@echo "  make clean          - Delete binaries and profile data"
-	@echo "  make inspect        - View main source in pager"
-	@echo "  make format         - Format all .cpp/.h files with clang-format"
-	@echo "  make lint           - Run static analysis with cppcheck (if installed)"
-	@echo "  make check          - Run formatter and linter together"
-	@echo "  make help           - Show this help message"
-	@echo ""
-
-.PHONY: all debug small run strip clean inspect format lint profile-gen profile-run profile-merge profile-use check help
+	@echo "  make strip       - Strip symbols"
+	@echo "  make clean       - Remove build artifacts"
+	@echo "  make format      - Run clang-format"
+	@echo "  make lint        - Run cppcheck"
+	@echo "  make help        - Show this help message"

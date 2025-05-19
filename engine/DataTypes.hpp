@@ -93,4 +93,17 @@ struct CameraView_t {
     Vec3_t offset;  // translation: (-dot(right,eye), -dot(up,eye), -dot(forward,eye))
 };
 
+// Edge struct (undirected)
+struct Edge {
+    size_t a, b;
+    Edge(size_t i, size_t j) : a(std::min(i,j)), b(std::max(i,j)) {}
+    bool operator==(const Edge& o) const { return a == o.a && b == o.b; }
+};
 
+namespace std {
+    template <> struct hash<Edge> {
+        size_t operator()(const Edge& e) const {
+            return std::hash<size_t>()(e.a) ^ (std::hash<size_t>()(e.b) << 1);
+        }
+    };
+}

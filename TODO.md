@@ -6,10 +6,10 @@ A serious plan for building a robust ASCII-based 3D renderer.
 
 ## ✅ Core Renderer Engine
 
-- [ ] Refactor to SOA and pass indexes (Impossible difficulty)
+- [X] Refactor to SOA and pass indexes (Impossible difficulty)
 - [ ] Interpolating lines (`VecLerp` or Bresenham)
 - [ ] Z-sorting (use `cam.z` depth)
-- [ ] Triangle polygons
+- [X] Triangle polygons
 - [ ] Backface culling
 - [ ] Assert math and rendering correctness
 - [ ] Double Buffer
