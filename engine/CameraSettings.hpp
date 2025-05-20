@@ -3,12 +3,12 @@
 #include <cmath>
 
 namespace CameraSettings {
-constexpr int screen_width = 80;
-constexpr int screen_height = 24;
+constexpr int screen_width = 212;
+constexpr int screen_height = 49;
 constexpr double PI = 3.14159265358979323846;
 constexpr double aspect_ratio =
     static_cast<double>(screen_width) / screen_height;
-constexpr double camera_fov = 40.0;
+constexpr double camera_fov = 25.0;
 constexpr double near_plane = 0.1;
 constexpr double far_plane = 100.0;
 constexpr double pixel_aspect = 2.0;

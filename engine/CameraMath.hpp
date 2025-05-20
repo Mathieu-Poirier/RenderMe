@@ -1,6 +1,6 @@
 #pragma once
 #include "DataTypes.hpp"
-#include "Math3D.hpp"
+#include "VectorOperations.hpp"
 #include "CameraSettings.hpp"
 #include <cmath>
 #include <cassert>

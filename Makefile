@@ -28,7 +28,7 @@ DEMO_BIN   := $(patsubst $(demo_DIR)/%.cpp,$(BUILD_DIR)/%,$(DEMO_SRC))
 
 # ==== Targets ====
 
-.PHONY: all demos build-demo run-demo debug small profile-gen profile-use strip clean format lint help
+.PHONY: all demos build-demo run-demo debug small profile-gen profile-use strip clean lint help run-demo
 
 # Build all demos
 all: demos
@@ -41,7 +41,7 @@ build-demo:
 	$(CXX) $(CXXFLAGS) $(RELEASE_FLAGS) -o $(BUILD_DIR)/$(NAME) $(demo_DIR)/$(NAME).cpp $(ENGINE_SRC)
 
 # Run a single demo
-run-demo: build-demo
+run-demo:
 	@./$(BUILD_DIR)/$(NAME)
 
 # Builds a single demo in debug mode
@@ -71,12 +71,6 @@ strip:
 clean:
 	rm -rf $(BUILD_DIR) default.profraw default.profdata
 
-# Format source
-format:
-	@command -v clang-format >/dev/null 2>&1 && \
-		clang-format -i $(ENGINE_SRC) $(DEMO_SRC) || \
-		echo "clang-format not found. Install it to enable formatting."
-
 # Static analysis
 lint:
 	@command -v cppcheck >/dev/null 2>&1 && \
@@ -103,7 +97,6 @@ help:
 	@echo "Utility Targets:"
 	@echo "  make strip          - Strip symbols from demo binary"
 	@echo "  make clean          - Remove all build artifacts"
-	@echo "  make format         - Format all source code"
 	@echo "  make lint           - Run static analysis (cppcheck)"
 	@echo "  make help           - Show this help message"
 	@echo ""
